@@ -10,6 +10,8 @@ target 'ChatApp Prototype' do
     pod 'Firebase/Firestore'
     pod 'IQKeyboardManagerSwift'
     pod 'SCLAlertView'
+    pod 'Firebase/Analytics'
+    pod 'Firebase/DynamicLinks'
 
   target 'ChatApp PrototypeTests' do
     inherit! :search_paths

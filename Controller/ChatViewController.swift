@@ -9,7 +9,6 @@
 import UIKit
 import Firebase
 
-
 class ChatViewController: UIViewController {
     @IBOutlet weak var messageTextField: UITextField!
     @IBOutlet weak var tableView: UITableView!
@@ -56,6 +55,7 @@ class ChatViewController: UIViewController {
         inviteButton.setImage(UIImage(systemName: "plus"), for: .normal)
         signOutButton.setTitle("Sign Out", for: .normal)
         signOutButton.addTarget(self, action: #selector(self.signOutButtonPressed), for: .touchUpInside)
+        inviteButton.addTarget(self, action: #selector(self.inviteButtonPressed), for: .touchUpInside)
         //assigns aspect fit to be the content mode of the cartbutton
         signOutButton.contentMode = .scaleAspectFit
         self.navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: signOutButton),UIBarButtonItem(customView: inviteButton)]
@@ -72,6 +72,60 @@ class ChatViewController: UIViewController {
         }
         
         
+    }
+    @objc func inviteButtonPressed(){
+        
+        //creating link Parameter
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.example.com"
+        components.path = "/recipes"
+        
+        let recipeIDQueryItem = URLQueryItem(name: "recipeID", value: "rcp_apple_pie")
+        components.queryItems = [recipeIDQueryItem]
+        
+        guard let linkParameter = components.url else{return}
+        print("testing 1,2: \(linkParameter.absoluteString)")
+        
+        //Creating the big dynamic link
+        guard let shareLink = DynamicLinkComponents.init(link: linkParameter, domainURIPrefix: "https://chatappprototype.page.link")else{
+            print("Could not create FDL components")
+            return
+        }
+        if let myBundleId = Bundle.main.bundleIdentifier{
+        shareLink.iOSParameters = DynamicLinkIOSParameters(bundleID: myBundleId)
+        }
+        //temporary use google photos
+        shareLink.iOSParameters?.appStoreID = "962194608"
+        
+        shareLink.socialMetaTagParameters = DynamicLinkSocialMetaTagParameters()
+        shareLink.socialMetaTagParameters?.title = "Testing"
+        
+        guard let longURL = shareLink.url else{return}
+        print("The long dynamic link is \(longURL.absoluteString)")
+        
+        shareLink.shorten { (url, warnings, error) in
+            if let error = error{
+                print("Oh no! Got an error!\(error)")
+            }
+            if let warnings = warnings{
+                for warning in warnings{
+                    print("FDL Warning:\(warning)")
+                }
+            }
+            guard let url = url else{return}
+            print("I have a url:\(url.absoluteString)")
+            self.showShareSheet(url: url)
+        }
+        
+        
+        
+        
+    }
+    func showShareSheet(url:URL){
+        let promoText = "Join the group chat using the link above"
+        let activityVC = UIActivityViewController(activityItems: [promoText,url], applicationActivities: nil)
+        present(activityVC, animated: true)
     }
     func loadData(){
         db.collection(collectionName).order(by: "dateField").addSnapshotListener{ (querySnapshot, err) in
